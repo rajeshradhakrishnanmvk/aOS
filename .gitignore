@@ -1,0 +1,22 @@
+# Build artifacts
+kubectl-brain
+kubectl-brain.exe
+
+# Go
+*.test
+*.out
+coverage.html
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temp
+/tmp/

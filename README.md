@@ -1,1 +1,230 @@
-# aOS
+# ClusterBrain 🧠
+
+**A Privacy-First Kubernetes Incident Copilot**
+
+> Diagnose Kubernetes issues locally with Gemma 4 and Ollama. No cloud. No data leaks.
+
+ClusterBrain is a `kubectl` plugin that brings AI-powered incident diagnosis to your terminal without sending a single byte to the cloud. It combines local LLM inference via [Ollama](https://ollama.ai) with read-only Kubernetes context collection to give you structured, evidence-backed diagnoses of cluster issues.
+
+---
+
+## Why Local-First?
+
+When something breaks in production, you need answers fast — and you need them without pasting sensitive cluster data into a cloud service. ClusterBrain runs entirely on your machine:
+
+- **Your cluster context stays private.** Pod specs, logs, and events never leave your laptop.
+- **No API keys. No rate limits. No subscriptions.** Just your local Ollama instance.
+- **Works offline.** Diagnose issues on an air-gapped cluster or a homelab with no internet.
+- **Powered by Gemma 4** — Google's reasoning-optimized model, available via Ollama with `gemma4:e4b`.
+
+---
+
+## Features
+
+| Command | What it does |
+|---------|-------------|
+| `kubectl brain diagnose pod` | Analyze pod failures: CrashLoopBackOff, OOMKill, ImagePullBackOff, probe failures |
+| `kubectl brain explain deployment` | Understand deployment health, rollout status, and pod states |
+| `kubectl brain review-file` | Static analysis of Kubernetes YAML for anti-patterns |
+| `kubectl brain suggest-fix pod/deployment` | Get human-reviewable remediation suggestions |
+
+All commands are **read-only by default**. ClusterBrain never applies, deletes, patches, scales, or exec's anything automatically.
+
+---
+
+## Prerequisites
+
+- **Go 1.22+** (for building from source)
+- **[kubectl](https://kubernetes.io/docs/tasks/tools/)** configured and pointing at your cluster
+- **[Ollama](https://ollama.ai)** running locally with Gemma 4 pulled:
+
+```bash
+ollama pull gemma4:e4b
+```
+
+---
+
+## Installation
+
+### From source
+
+```bash
+git clone https://github.com/rajeshradhakrishnanmvk/aOS.git
+cd aOS
+make build
+make install   # copies kubectl-brain to $GOPATH/bin
+```
+
+### Verify the plugin is available
+
+```bash
+kubectl brain --help
+```
+
+> kubectl discovers plugins named `kubectl-<name>` automatically if they are on your `$PATH`.
+
+---
+
+## Usage
+
+```bash
+# Diagnose a failing pod
+kubectl brain diagnose pod api-7d9f6d8f9c-abc12 -n production
+
+# Explain a deployment's current state
+kubectl brain explain deployment payments -n staging
+
+# Review a Kubernetes manifest for anti-patterns
+kubectl brain review-file ./k8s/deployment.yaml
+
+# Get safe, human-reviewable fix suggestions for a pod
+kubectl brain suggest-fix pod worker-123 -n jobs
+
+# Get suggestions for a deployment
+kubectl brain suggest-fix deployment frontend -n production
+```
+
+### Example output format
+
+Every ClusterBrain response follows a structured schema:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 POD DIAGNOSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SUMMARY:
+The pod api-7d9f6d8f9c-abc12 is in a CrashLoopBackOff state due to a
+failed readiness probe. The container exits immediately after startup.
+
+EVIDENCE:
+- restartCount: 14
+- lastState: terminated with exit code 1
+- readinessProbe failing: GET /healthz returns 500
+
+LIKELY_CAUSES:
+- Application is failing to start (misconfigured environment variable)
+- Readiness probe path does not match the application's health endpoint
+
+SAFE_ACTIONS:
+- Check application startup logs for panic or config errors
+- Verify the DATABASE_URL environment variable is set correctly
+
+SUGGESTED_COMMANDS:
+kubectl logs api-7d9f6d8f9c-abc12 -n production --previous
+kubectl describe pod api-7d9f6d8f9c-abc12 -n production
+
+CONFIDENCE: HIGH
+
+LIMITATIONS:
+- Cannot access the application's configuration management system
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## Configuration
+
+Copy the example config to get started:
+
+```bash
+mkdir -p ~/.config/clusterbrain
+cp configs/config.example.yaml ~/.config/clusterbrain/config.yaml
+```
+
+Edit `~/.config/clusterbrain/config.yaml`:
+
+```yaml
+ollama_url: "http://localhost:11434"
+model: "gemma4:e4b"      # also try gemma4:26b for better reasoning
+namespace: "default"
+log_level: "info"
+max_log_lines: 100       # lines of pod logs to send to the model
+request_timeout: 60      # seconds before Ollama request times out
+```
+
+### Global Flags
+
+All flags can override config file values:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-n`, `--namespace` | `default` | Kubernetes namespace |
+| `--model` | `gemma4:e4b` | Ollama model to use |
+| `--ollama-url` | `http://localhost:11434` | Ollama API URL |
+| `--log-level` | `info` | Log level: debug, info, warn, error |
+
+---
+
+## Safety Philosophy
+
+ClusterBrain is designed to be **safe by default**:
+
+1. **Read-only Kubernetes access.** The only kubectl commands ClusterBrain issues are: `get`, `describe`, `logs`, `events`, and `rollout status`. Destructive operations are never called automatically.
+
+2. **No fabricated facts.** The system prompt instructs the model to clearly distinguish between *observed facts*, *inferences*, and *recommendations*. If evidence is insufficient, the model says so.
+
+3. **Human-in-the-loop for remediation.** The `suggest-fix` command displays a prominent warning that all suggestions must be reviewed before applying. No command is ever executed on your behalf.
+
+4. **Transparent limitations.** Every response includes a `LIMITATIONS:` section describing what could not be determined from the available data.
+
+5. **Context trimming, not blind dumping.** Large YAML files and logs are summarized before being sent to the LLM. Key status fields, conditions, and container states are extracted. This reduces noise and keeps context windows manageable.
+
+---
+
+## Architecture
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed architecture overview including package structure, data flow, and design decisions.
+
+---
+
+## Development
+
+```bash
+make build    # Build kubectl-brain binary
+make test     # Run unit tests
+make lint     # Run golangci-lint (if installed)
+make install  # Install to $GOPATH/bin
+make clean    # Remove binary
+```
+
+### Running tests
+
+```bash
+go test ./...
+```
+
+---
+
+## Roadmap
+
+**Near-term (MVP+)**
+- [ ] `--json` output flag for scripting and CI integration
+- [ ] Support for `StatefulSet`, `DaemonSet`, `Job`, `CronJob` resources
+- [ ] `kubectl brain watch pod <name>` — continuous monitoring mode
+- [ ] Integration with `kubectl top` for resource metrics context
+
+**Medium-term**
+- [ ] Multiple container support for multi-container pods
+- [ ] Namespace-level health summary: `kubectl brain health -n production`
+- [ ] Custom prompt templates via config file
+- [ ] Audit log of all diagnoses with timestamps
+
+**Future**
+- [ ] MCP (Model Context Protocol) server mode for editor integration
+- [ ] Ollama model auto-selection based on available hardware
+- [ ] Optional vector memory for cross-session context
+
+---
+
+## Contributing
+
+Contributions are welcome! Please open an issue to discuss your idea before submitting a PR.
+
+This project follows the principle that AI tools for infrastructure must be **safe, transparent, and local-first**. Any contribution should preserve these properties.
+
+---
+
+## License
+
+MIT
