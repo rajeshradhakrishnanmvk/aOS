@@ -1,6 +1,9 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/spf13/viper"
 )
 
@@ -32,7 +35,9 @@ func loadConfig() *Config {
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("$HOME/.config/clusterbrain")
+	if home, err := os.UserHomeDir(); err == nil {
+		viper.AddConfigPath(filepath.Join(home, ".config", "clusterbrain"))
+	}
 	viper.AddConfigPath(".")
 
 	// Ignore error if config file doesn't exist
