@@ -161,14 +161,12 @@ func extractKeyFields(yaml string) string {
 	inStatus := false
 	inConditions := false
 	inContainerStatuses := false
-	depth := 0
 
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 
 		if strings.HasPrefix(trimmed, "status:") {
 			inStatus = true
-			depth = 0
 			result.WriteString(line + "\n")
 			continue
 		}
@@ -193,7 +191,6 @@ func extractKeyFields(yaml string) string {
 				strings.Contains(trimmed, "reason:") || strings.Contains(trimmed, "message:") ||
 				strings.Contains(trimmed, "ready:") || strings.Contains(trimmed, "restartCount:") {
 				result.WriteString(line + "\n")
-				_ = depth
 			}
 		}
 

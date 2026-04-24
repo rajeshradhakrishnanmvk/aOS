@@ -28,7 +28,11 @@ func GetLogger() *zap.SugaredLogger {
 		zapCfg := zap.NewProductionConfig()
 		zapCfg.Level = zap.NewAtomicLevelAt(level)
 		zapCfg.OutputPaths = []string{"stderr"}
-		z, _ := zapCfg.Build()
+		z, err := zapCfg.Build()
+		if err != nil {
+			// Fallback to a no-op logger if build fails
+			z = zap.NewNop()
+		}
 		logger = z.Sugar()
 	})
 	return logger
