@@ -14,7 +14,7 @@ ClusterBrain is a local-first CLI tool that diagnoses Kubernetes issues using lo
 
 ## Prerequisites
 
-- Go 1.22+
+- Go 1.24+
 - [kubectl](https://kubernetes.io/docs/tasks/tools/) configured and pointing at your cluster
 - [Ollama](https://ollama.ai) running locally with `gemma4:e4b` pulled
 

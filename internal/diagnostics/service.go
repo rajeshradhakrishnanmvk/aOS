@@ -121,20 +121,3 @@ func (s *DiagnosisService) SuggestFix(resourceType, resourceName, namespace stri
 	return s.ollamaClient.Chat(s.promptBuilder.SystemPrompt(), userPrompt)
 }
 
-// ReviewService is a thin wrapper around DiagnosisService for file review operations.
-type ReviewService struct {
-	*DiagnosisService
-}
-
-func NewReviewService(cfg *config.Config) *ReviewService {
-	return &ReviewService{DiagnosisService: NewDiagnosisService(cfg)}
-}
-
-// SuggestionService is a thin wrapper around DiagnosisService for fix suggestion operations.
-type SuggestionService struct {
-	*DiagnosisService
-}
-
-func NewSuggestionService(cfg *config.Config) *SuggestionService {
-	return &SuggestionService{DiagnosisService: NewDiagnosisService(cfg)}
-}

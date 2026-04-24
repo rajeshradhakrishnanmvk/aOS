@@ -13,13 +13,10 @@ var reviewFileCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		filePath := args[0]
-		cfg := config.GetConfig()
-		if model != cfg.Model {
-			cfg.Model = model
-		}
-		if ollamaURL != cfg.OllamaURL {
-			cfg.OllamaURL = ollamaURL
-		}
+		cfgCopy := *config.GetConfig()
+		cfg := &cfgCopy
+		cfg.Model = model
+		cfg.OllamaURL = ollamaURL
 
 		formatter := output.NewFormatter()
 		formatter.PrintProgress("Reviewing file " + filePath)
