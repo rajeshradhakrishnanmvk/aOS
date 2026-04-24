@@ -120,4 +120,3 @@ func (s *DiagnosisService) SuggestFix(resourceType, resourceName, namespace stri
 	userPrompt := s.promptBuilder.BuildSuggestFixPrompt(resourceType, resourceName, namespace, context)
 	return s.ollamaClient.Chat(s.promptBuilder.SystemPrompt(), userPrompt)
 }
-
