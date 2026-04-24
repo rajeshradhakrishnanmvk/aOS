@@ -29,13 +29,28 @@ var explainDeploymentCmd = &cobra.Command{
 		formatter.PrintProgress(fmt.Sprintf("Collecting deployment info for %s in namespace %s", deployName, namespace))
 
 		svc := diagnostics.NewDiagnosisService(cfg)
-		result, err := svc.ExplainDeployment(namespace, deployName)
-		if err != nil {
-			formatter.PrintError(err)
-			return err
-		}
+		if stream {
+			formatter.PrintProgress(fmt.Sprintf("Collecting deployment info for %s in namespace %s", deployName, namespace))
+			svcStream := diagnostics.NewDiagnosisService(cfg)
+			err := svcStream.ExplainDeploymentStream(namespace, deployName, func(chunk string) {
+				fmt.Print(chunk)
+			}, func() {
+				fmt.Println()
+			})
+			if err != nil {
+				formatter.PrintError(err)
+				return err
+			}
+			return nil
+		} else {
+			result, err := svc.ExplainDeployment(namespace, deployName)
+			if err != nil {
+				formatter.PrintError(err)
+				return err
+			}
 
-		formatter.PrintExplanation(result)
+			formatter.PrintExplanation(result)
+		}
 		return nil
 	},
 }

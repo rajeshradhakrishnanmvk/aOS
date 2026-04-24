@@ -57,7 +57,7 @@ ClusterBrain is a CLI tool built with Go that integrates Kubernetes cluster diag
 ## Design Decisions
 
 ### Privacy First
-All LLM inference is local. The `OllamaClient` only communicates with `localhost:11434` by default. No telemetry, no cloud.
+All LLM inference is local. The `OllamaClient` only communicates with `127.0.0.1:11434` by default. No telemetry, no cloud.
 
 ### Read-Only Safety
 The `KubeCollector` only wraps read-only kubectl subcommands. The system prompt explicitly instructs the LLM not to suggest mutating commands. The `suggest-fix` command prints a prominent warning that suggestions are human-reviewable only.

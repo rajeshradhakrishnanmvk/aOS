@@ -43,6 +43,19 @@ func runSuggestFix(resourceType, resourceName string) error {
 	fmt.Println("\n⚠️  NOTE: These are suggestions only. Review before applying any changes.")
 
 	svc := diagnostics.NewDiagnosisService(cfg)
+	if stream {
+		err := svc.SuggestFixStream(resourceType, resourceName, namespace, func(chunk string) {
+			fmt.Print(chunk)
+		}, func() {
+			fmt.Println()
+		})
+		if err != nil {
+			formatter.PrintError(err)
+			return err
+		}
+		return nil
+	}
+
 	result, err := svc.SuggestFix(resourceType, resourceName, namespace)
 	if err != nil {
 		formatter.PrintError(err)

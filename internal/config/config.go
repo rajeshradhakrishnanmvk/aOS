@@ -8,12 +8,15 @@ import (
 )
 
 type Config struct {
-	OllamaURL      string `mapstructure:"ollama_url"`
-	Model          string `mapstructure:"model"`
-	Namespace      string `mapstructure:"namespace"`
-	LogLevel       string `mapstructure:"log_level"`
-	MaxLogLines    int    `mapstructure:"max_log_lines"`
-	RequestTimeout int    `mapstructure:"request_timeout"`
+	OllamaURL          string `mapstructure:"ollama_url"`
+	Model              string `mapstructure:"model"`
+	Namespace          string `mapstructure:"namespace"`
+	LogLevel           string `mapstructure:"log_level"`
+	MaxLogLines        int    `mapstructure:"max_log_lines"`
+	RequestTimeout     int    `mapstructure:"request_timeout"`
+	OllamaRetries      int    `mapstructure:"ollama_retries"`
+	OllamaBackoffMs    int    `mapstructure:"ollama_backoff_ms"`
+	OllamaMaxBackoffMs int    `mapstructure:"ollama_max_backoff_ms"`
 }
 
 var cfg *Config
@@ -26,12 +29,15 @@ func GetConfig() *Config {
 }
 
 func loadConfig() *Config {
-	viper.SetDefault("ollama_url", "http://localhost:11434")
+	viper.SetDefault("ollama_url", "http://127.0.0.1:11434")
 	viper.SetDefault("model", "gemma4:e4b")
 	viper.SetDefault("namespace", "default")
 	viper.SetDefault("log_level", "info")
 	viper.SetDefault("max_log_lines", 100)
 	viper.SetDefault("request_timeout", 60)
+	viper.SetDefault("ollama_retries", 3)
+	viper.SetDefault("ollama_backoff_ms", 500)
+	viper.SetDefault("ollama_max_backoff_ms", 5000)
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")

@@ -33,8 +33,8 @@ func TestDefaultValues(t *testing.T) {
 	cfg = nil
 	c := GetConfig()
 
-	if c.OllamaURL != "http://localhost:11434" {
-		t.Errorf("expected OllamaURL 'http://localhost:11434', got %q", c.OllamaURL)
+	if c.OllamaURL != "http://127.0.0.1:11434" {
+		t.Errorf("expected OllamaURL 'http://127.0.0.1:11434', got %q", c.OllamaURL)
 	}
 	if c.Model != "gemma4:e4b" {
 		t.Errorf("expected Model 'gemma4:e4b', got %q", c.Model)

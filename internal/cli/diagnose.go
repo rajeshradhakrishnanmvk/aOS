@@ -29,13 +29,28 @@ var diagnosePodCmd = &cobra.Command{
 		formatter.PrintProgress(fmt.Sprintf("Collecting pod diagnostics for %s in namespace %s", podName, namespace))
 
 		svc := diagnostics.NewDiagnosisService(cfg)
-		result, err := svc.DiagnosePod(namespace, podName)
-		if err != nil {
-			formatter.PrintError(err)
-			return err
-		}
+		if stream {
+			formatter.PrintProgress(fmt.Sprintf("Collecting pod diagnostics for %s in namespace %s", podName, namespace))
+			svcStream := diagnostics.NewDiagnosisService(cfg)
+			err := svcStream.DiagnosePodStream(namespace, podName, func(chunk string) {
+				fmt.Print(chunk)
+			}, func() {
+				fmt.Println()
+			})
+			if err != nil {
+				formatter.PrintError(err)
+				return err
+			}
+			return nil
+		} else {
+			result, err := svc.DiagnosePod(namespace, podName)
+			if err != nil {
+				formatter.PrintError(err)
+				return err
+			}
 
-		formatter.PrintDiagnosis(result)
+			formatter.PrintDiagnosis(result)
+		}
 		return nil
 	},
 }

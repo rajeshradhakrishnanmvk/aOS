@@ -1,6 +1,9 @@
-ollama_url: "http://localhost:11434"
+ollama_url: "http://127.0.0.1:11434"
 model: "gemma4:e4b"
 namespace: "default"
 log_level: "info"
 max_log_lines: 100
 request_timeout: 60
+ollama_retries: 3
+ollama_backoff_ms: 500
+ollama_max_backoff_ms: 5000

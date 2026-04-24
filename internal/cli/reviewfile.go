@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/rajeshradhakrishnanmvk/aOS/internal/config"
 	"github.com/rajeshradhakrishnanmvk/aOS/internal/diagnostics"
 	"github.com/rajeshradhakrishnanmvk/aOS/internal/output"
@@ -22,6 +23,20 @@ var reviewFileCmd = &cobra.Command{
 		formatter.PrintProgress("Reviewing file " + filePath)
 
 		svc := diagnostics.NewDiagnosisService(cfg)
+		if stream {
+			formatter.PrintProgress("Reviewing file " + filePath)
+			svcStream := diagnostics.NewDiagnosisService(cfg)
+			err := svcStream.ReviewFileStream(filePath, func(chunk string) {
+				fmt.Print(chunk)
+			}, func() {
+				fmt.Println()
+			})
+			if err != nil {
+				formatter.PrintError(err)
+				return err
+			}
+			return nil
+		}
 		result, err := svc.ReviewFile(filePath)
 		if err != nil {
 			formatter.PrintError(err)
