@@ -1,0 +1,6 @@
+ollama_url: "http://localhost:11434"
+model: "gemma4:e4b"
+namespace: "default"
+log_level: "info"
+max_log_lines: 100
+request_timeout: 60
